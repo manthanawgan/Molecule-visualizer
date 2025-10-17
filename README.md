@@ -6,8 +6,13 @@ A lightweight mono-repository that hosts a Vite-powered React prototype for the 
 
 ```
 .
-├── backend/                 # FastAPI stub and Python dependencies
-│   ├── app.py
+├── backend/                 # FastAPI application and Python dependencies
+│   ├── app/
+│   │   ├── __init__.py      # FastAPI app factory and health route
+│   │   ├── asgi.py          # ASGI entrypoint for deployment
+│   │   ├── main.py          # Local development entrypoint
+│   │   └── models.py        # Pydantic models shared across the API
+│   ├── pyproject.toml
 │   └── requirements.txt
 ├── frontend/                # Vite + React + Tailwind frontend
 │   ├── index.html
@@ -96,18 +101,10 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn backend.app:app --reload --port 8000
+uvicorn app.main:app --reload --port 8000uvicorn backend.app:app --reload --port 8000
 ```
 
-The backend provides a lightweight SMILES parser that powers the prototype
-endpoints:
-
-- `GET /health` — liveness probe used by the Docker tooling.
-- `POST /smiles` — create a new molecule or update an existing one. Pass
-  `{"minimize": true}` to trigger the UFF-inspired minimisation step which
-  recentres and shortens the generated geometry.
-- `GET /distance` — compute the Euclidean distance between any two atoms stored
-  in a molecule created via `/smiles`.
+The backend currently exposes a `/health` route and initial Pydantic models that describe atoms, bonds, metadata, and molecule payloads. Molecules are stored in-memory in a dictionary keyed by `UUID` until persistence is introduced.
 
 Run the automated backend tests with:
 
