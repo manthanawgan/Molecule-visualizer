@@ -2,6 +2,8 @@ import { ChangeEvent, FormEvent, useMemo, useRef, useState } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { apiBaseUrl, moleculeApi } from "./lib/api";
 import type { MoleculeResponse } from "./lib/types";
+import { MoleculeViewer } from "./components/MoleculeViewer";
+import "./components/MoleculeViewer.css";
 
 type AsyncStatus = "idle" | "loading" | "uploading";
 
@@ -248,16 +250,19 @@ function App() {
         </aside>
 
         <section className="flex flex-1 flex-col overflow-hidden">
-          <div className="surface flex h-full min-h-[420px] flex-1 items-center justify-center border-2 border-dashed border-slate-300 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
-            <div className="mx-auto max-w-md space-y-2">
-              <h2 className="text-xl font-semibold">Canvas placeholder</h2>
-              <p>
-                The interactive 3D viewer will mount here. Hook this container into
-                your preferred rendering library (e.g. Three.js) and feed it with the
-                molecule data surface, atoms, and bond distances.
-              </p>
+          {molecule ? (
+            <MoleculeViewer molecule={molecule} title={molecule.smiles} />
+          ) : (
+            <div className="surface flex h-full min-h-[420px] flex-1 items-center justify-center border-2 border-dashed border-slate-300 text-center text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              <div className="mx-auto max-w-md space-y-2">
+                <h2 className="text-xl font-semibold">3D Molecule Viewer</h2>
+                <p>
+                  Upload a molecule file or enter a SMILES string to visualize the 3D structure.
+                  The viewer will show atoms as spheres and bonds as sticks with interactive controls.
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </section>
       </main>
     </div>
