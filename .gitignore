@@ -1,5 +1,7 @@
 # Node
 node_modules/
+frontend/node_modules/
+frontend/dist/
 npm-debug.log*
 pnpm-debug.log*
 yarn-error.log
@@ -25,6 +27,13 @@ venv/
 !.env.example
 
 # Editors
+.vscode/
+.idea/
+*.swp
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
 .DS_Store
 .idea/
 *.swp

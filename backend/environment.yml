@@ -1,0 +1,11 @@
+name: rdkit-env
+channels:
+  - rdkit
+  - conda-forge
+dependencies:
+  - python=3.11
+  - rdkit
+  - pip
+  - pip:
+      - fastapi
+      - uvicorn[standard]
