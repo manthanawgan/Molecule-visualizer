@@ -4,6 +4,12 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const canvas = document.getElementById('molecule-canvas');
 const statusEl = document.getElementById('loading-indicator');
+const viewerContainer = document.getElementById('viewer');
+const viewerStatusEl = document.getElementById('viewer-status');
+
+let moleculeViewer = null;
+let viewerResizeObserver = null;
+let hasBoundViewerResizeListener = false;
 
 if (!(canvas instanceof HTMLCanvasElement)) {
   throw new Error('Unable to find target canvas element.');
@@ -147,6 +153,105 @@ function initialise() {
   }
 }
 
+function handleViewerResize() {
+  if (moleculeViewer) {
+    moleculeViewer.resize();
+    moleculeViewer.render();
+  }
+}
+
+function initialiseMoleculeViewer() {
+  if (!(viewerContainer instanceof HTMLElement)) {
+    console.warn('Skipping 3Dmol viewer initialisation: target container not found.');
+    return;
+  }
+
+  if (moleculeViewer) {
+    handleViewerResize();
+    return;
+  }
+
+  const mol = window.$3Dmol;
+
+  if (!mol) {
+    console.error('3Dmol.js failed to load. Ensure the CDN script tag is available.');
+    if (viewerStatusEl) {
+      viewerStatusEl.classList.remove('is-hidden');
+      viewerStatusEl.setAttribute('aria-hidden', 'false');
+      viewerStatusEl.textContent = '3Dmol.js library unavailable.';
+    }
+    return;
+  }
+
+  try {
+    if (viewerStatusEl) {
+      viewerStatusEl.classList.remove('is-hidden');
+      viewerStatusEl.setAttribute('aria-hidden', 'false');
+      viewerStatusEl.textContent = 'Loading sample molecule…';
+    }
+
+    moleculeViewer = mol.createViewer(viewerContainer, {
+      backgroundColor: '#020617',
+      defaultcolors: mol.rasmolElementColors,
+    });
+
+    if (!hasBoundViewerResizeListener) {
+      window.addEventListener('resize', handleViewerResize);
+      hasBoundViewerResizeListener = true;
+    }
+
+    if (viewerResizeObserver) {
+      viewerResizeObserver.disconnect();
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      viewerResizeObserver = new ResizeObserver(handleViewerResize);
+      viewerResizeObserver.observe(viewerContainer);
+    }
+
+    handleViewerResize();
+
+    mol.download(
+      'pdb:1CRN',
+      moleculeViewer,
+      {},
+      () => {
+        moleculeViewer.setStyle({}, { cartoon: { color: 'spectrum' } });
+        moleculeViewer.addStyle({ hetflag: true }, { stick: { radius: 0.25, colorscheme: 'greenCarbon' } });
+        moleculeViewer.zoomTo();
+        moleculeViewer.render();
+        if (typeof moleculeViewer.zoom === 'function') {
+          moleculeViewer.zoom(1.05, 500);
+        }
+        if (typeof moleculeViewer.spin === 'function') {
+          moleculeViewer.spin(true);
+        }
+
+        if (viewerStatusEl) {
+          viewerStatusEl.textContent = 'Sample molecule loaded';
+          viewerStatusEl.setAttribute('aria-hidden', 'true');
+          window.setTimeout(() => viewerStatusEl.classList.add('is-hidden'), 220);
+        }
+      },
+      (error) => {
+        console.error('Failed to load sample molecule (PDB 1CRN).', error);
+        if (viewerStatusEl) {
+          viewerStatusEl.classList.remove('is-hidden');
+          viewerStatusEl.setAttribute('aria-hidden', 'false');
+          viewerStatusEl.textContent = 'Unable to load sample molecule.';
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Failed to initialise 3Dmol viewer.', error);
+    if (viewerStatusEl) {
+      viewerStatusEl.classList.remove('is-hidden');
+      viewerStatusEl.setAttribute('aria-hidden', 'false');
+      viewerStatusEl.textContent = 'Unable to initialise molecule viewer.';
+    }
+  }
+}
+
 if (typeof ResizeObserver !== 'undefined') {
   const resizeObserver = new ResizeObserver(() => {
     setRendererSize();
@@ -155,5 +260,11 @@ if (typeof ResizeObserver !== 'undefined') {
 }
 
 window.addEventListener('resize', setRendererSize);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialiseMoleculeViewer);
+} else {
+  initialiseMoleculeViewer();
+}
 
 initialise();
