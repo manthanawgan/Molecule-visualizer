@@ -1,58 +1,77 @@
-# Molecule Visualizer
+# Molecule Visualizer Monorepo
 
-This prototype couples a Three.js powered Vite frontend with a FastAPI backend that exposes a small RDKit-enabled API for molecule analysis.
+This repository bundles a FastAPI backend powered by RDKit with a Three.js + Vite frontend. The entire stack is containerised so that the only local dependency required is Docker (with Compose v2).
+
+## Repository layout
+
+```
+.
+├── backend/
+│   ├── app/
+│   │   └── main.py          # FastAPI entry point exposing RDKit utilities
+│   ├── Dockerfile           # Micromamba-based image with RDKit preinstalled
+│   └── environment.yml      # Conda specification for the RDKit environment
+├── frontend/
+│   ├── Dockerfile           # Multi-stage build that serves Vite preview
+│   ├── index.html           # Vite HTML shell
+│   ├── package.json         # Vite + Three.js project manifest
+│   └── src/
+│       ├── main.js          # Three.js scene + REST integration
+│       └── style.css
+├── docker-compose.yml       # Orchestrates the frontend and backend services
+├── .env.example             # Optional overrides for compose configuration
+└── README.md
+```
 
 ## Prerequisites
 
-- Docker 20.10+
-- Docker Compose v2
+- [Docker](https://docs.docker.com/get-docker/) 24+
+- [Docker Compose](https://docs.docker.com/compose/) v2 (bundled with Docker Desktop)
 
-## Running the stack
+> No local Python or Node.js runtimes are required when using Docker Compose.
 
-```bash
-docker compose up --build
-```
+## Quick start with Docker Compose
 
-Once the build completes you can browse the application at http://localhost:4173.
+1. (Optional) Override defaults by copying the environment template:
+   ```bash
+   cp .env.example .env
+   ```
+2. Build and start both services:
+   ```bash
+   docker compose up --build
+   ```
+3. Visit the running stack:
+   - Frontend UI: [http://localhost:4173](http://localhost:4173)
+   - Backend health check: [http://localhost:8000/health](http://localhost:8000/health)
 
-The frontend sends requests to the backend via the automatically provided `VITE_API_BASE_URL` environment variable. CORS is enabled for both the `frontend` service inside Docker and for localhost access, enabling frictionless cross-container calls.
+`docker compose up` will install Node dependencies for the frontend and create a micromamba environment containing RDKit for the backend on the first run. Subsequent runs reuse the cached layers.
 
-### Backend
+## Service overview
 
-- **Image**: based on `mambaorg/micromamba` with RDKit installed inside a dedicated `rdkit-env` environment.
-- **Service Name**: `backend`
-- **Port**: `8000`
-- **Health endpoint**: `GET /health`
-- **Molecule summary endpoint**: `GET /molecule/summary?smiles=` – returns atom, bond, and ring counts via RDKit.
+### Backend (`backend` service)
+- **Runtime:** FastAPI served by Uvicorn.
+- **Image base:** `mambaorg/micromamba` (RDKit provided via `environment.yml`).
+- **Expose:** `GET /health` and `GET /molecule/summary?smiles=<SMILES>`.
+- **Hot reload:** The `./backend/app` directory is bind mounted into the container so code edits are picked up after a container restart without rebuilding the image.
+- **CORS:** Controlled by the `CORS_ALLOW_ORIGINS` environment variable (comma-separated origins). Defaults allow requests from the frontend service and localhost.
 
-### Frontend
+### Frontend (`frontend` service)
+- **Tooling:** Vite + Three.js.
+- **Serving:** The production-ready bundle is served via `vite preview` on port `4173`.
+- **API endpoint discovery:** The build argument and environment variable `VITE_API_BASE_URL` point to the backend (defaults to `http://localhost:8000`).
+- **Caching:** Node installation caches are stored in the `node-modules-cache` volume for faster rebuilds.
 
-- **Image**: multi-stage build using `node:20-alpine`
-- **Service Name**: `frontend`
-- **Public Port**: `4173` (served with `vite preview`)
-- Uses the `VITE_API_BASE_URL` build argument and runtime environment variable to discover the backend URL.
+## Smoke testing the stack
 
-## Development Notes
+Use the default SMILES value (`C1=CC=CC=C1`) in the UI form to verify end-to-end functionality. A successful round-trip should display the RDKit-derived summary (atom, bond, and ring counts) returned from the backend.
 
-- The backend service bind-mounts `./backend/app` so changes to Python files are picked up without rebuilding the image (restart the container to reload).
-- Node and Vite caches are stored under a named Docker volume (`node-modules-cache`) to speed up subsequent installs.
-
-## Smoke Testing
-
-Run the following to confirm everything comes up cleanly:
-
-```bash
-docker compose up --build
-```
-
-Expected output:
-
-1. `backend` image builds with micromamba installing RDKit, FastAPI, and Uvicorn.
-2. `frontend` image builds via Vite and starts the preview server.
-3. Visiting `http://localhost:4173` shows the visualizer. Submitting the default SMILES string returns RDKit-derived molecule metrics from the backend.
-
-To tear everything down:
+To rebuild the images without starting containers, run `docker compose build`. To stop and remove the stack, run:
 
 ```bash
 docker compose down
 ```
+
+## Development notes
+
+- The project still supports local development without Docker if preferred. Install the dependencies under `backend/` and `frontend/` and run the services manually.
+- When running inside Docker, update the `.env` file to customise ports or override the backend URL exposed to the frontend.

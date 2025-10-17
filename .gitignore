@@ -2,6 +2,9 @@
 node_modules/
 frontend/node_modules/
 frontend/dist/
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log
 
 # Python
 __pycache__/
@@ -9,13 +12,30 @@ __pycache__/
 *.pyo
 *.pyd
 *.so
+*.egg-info/
+*.eggs/
+.python-version
+.pytest_cache/
+.mypy_cache/
 .venv/
-.env
+venv/
+.envrc
 
-# VSCode / IDE
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editors
 .vscode/
 .idea/
+*.swp
 
-# macOS / Linux
+# macOS / Windows
 .DS_Store
 Thumbs.db
+
+# Build artifacts
+dist/
+build/
+coverage/
