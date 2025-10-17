@@ -1,4 +1,4 @@
-const CDN_URL = 'https://www.3dmol.org/build/3Dmol-min.js';
+const CDN_URL = '/3Dmol-min.js';
 const SCRIPT_ID = 'three-dmol-script';
 
 let loaderPromise = null;
@@ -8,6 +8,11 @@ export function load3DMol() {
     return Promise.reject(new Error('3Dmol.js loader must run in a browser environment.'));
   }
 
+  if (window["3Dmol"]) {
+    return Promise.resolve(window["3Dmol"]);
+  }
+
+  // Also check for the $3Dmol global (some versions use this)
   if (window.$3Dmol) {
     return Promise.resolve(window.$3Dmol);
   }
@@ -17,11 +22,13 @@ export function load3DMol() {
       const existingScript = document.getElementById(SCRIPT_ID);
 
       const handleLoad = () => {
-        if (window.$3Dmol) {
+        if (window["3Dmol"]) {
+          resolve(window["3Dmol"]);
+        } else if (window.$3Dmol) {
           resolve(window.$3Dmol);
         } else {
           loaderPromise = null;
-          reject(new Error('3Dmol.js loaded but did not expose the global $3Dmol object.'));
+          reject(new Error('3Dmol.js loaded but did not expose the global 3Dmol object.'));
         }
       };
 
@@ -31,10 +38,10 @@ export function load3DMol() {
       };
 
       if (existingScript) {
-        if (existingScript.dataset.loaded === 'true' && window.$3Dmol) {
-          resolve(window.$3Dmol);
-          return;
-        }
+      if (existingScript.dataset.loaded === 'true' && (window["3Dmol"] || window.$3Dmol)) {
+        resolve(window["3Dmol"] || window.$3Dmol);
+        return;
+      }
 
         existingScript.addEventListener('load', handleLoad, { once: true });
         existingScript.addEventListener('error', handleError, { once: true });

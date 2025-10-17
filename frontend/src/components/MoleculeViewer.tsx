@@ -7,6 +7,11 @@ const load3DMol = (): Promise<any> => {
     return Promise.reject(new Error('3Dmol.js loader must run in a browser environment.'));
   }
 
+  if (window["3Dmol"]) {
+    return Promise.resolve(window["3Dmol"]);
+  }
+
+  // Also check for the $3Dmol global (some versions use this)
   if (window.$3Dmol) {
     return Promise.resolve(window.$3Dmol);
   }
@@ -15,14 +20,16 @@ const load3DMol = (): Promise<any> => {
     const script = document.createElement('script');
     script.type = 'text/javascript';
     script.async = true;
-    script.src = 'https://www.3dmol.org/build/3Dmol-min.js';
+    script.src = '/3Dmol-min.js';
     script.crossOrigin = 'anonymous';
 
     script.onload = () => {
-      if (window.$3Dmol) {
+      if (window["3Dmol"]) {
+        resolve(window["3Dmol"]);
+      } else if (window.$3Dmol) {
         resolve(window.$3Dmol);
       } else {
-        reject(new Error('3Dmol.js loaded but did not expose the global $3Dmol object.'));
+        reject(new Error('3Dmol.js loaded but did not expose the global 3Dmol object.'));
       }
     };
 
@@ -37,6 +44,7 @@ const load3DMol = (): Promise<any> => {
 // Extend window type for 3Dmol
 declare global {
   interface Window {
+    "3Dmol": any;
     $3Dmol: any;
   }
 }
@@ -93,7 +101,7 @@ export function MoleculeViewer({ molecule, title }: MoleculeViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
   const defaultViewRef = useRef<any>(null);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   const [status, setStatus] = useState({ loading: true, error: null as string | null });
   const [toast, setToast] = useState<string | null>(null);
@@ -118,7 +126,7 @@ export function MoleculeViewer({ molecule, title }: MoleculeViewerProps) {
     let cancelled = false;
 
     load3DMol()
-      .then(($3Dmol) => {
+      .then((ThreeDmol) => {
         if (cancelled) {
           return;
         }
@@ -127,7 +135,7 @@ export function MoleculeViewer({ molecule, title }: MoleculeViewerProps) {
           throw new Error('3Dmol target container is missing.');
         }
 
-        const viewer = new $3Dmol.GlViewer(containerRef.current, {
+        const viewer = new ThreeDmol.GlViewer(containerRef.current, {
           backgroundColor: '#0f172a',
           antialias: true,
         });
