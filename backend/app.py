@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 
 from .geometry import compute_atom_distance, compute_bond_distances
@@ -12,6 +12,11 @@ from .molecules import (
     MoleculeData,
     create_molecule,
     update_molecule_geometry,
+)
+from .parsing import (
+    MoleculeParseError,
+    UnsupportedFileTypeError,
+    parse_uploaded_file,
 )
 
 app = FastAPI(title="Molecule Visualizer Backend", version="0.2.0")
@@ -65,6 +70,48 @@ class MoleculeResponse(BaseModel):
 async def health() -> dict[str, str]:
     """Simple liveness probe used by local development tooling."""
     return {"status": "ok"}
+
+
+@app.post("/upload")
+async def upload_molecule(file: UploadFile = File(...)) -> dict[str, str]:
+    try:
+        contents = await file.read()
+    except Exception as exc:  # pragma: no cover - defensive branch
+        raise HTTPException(status_code=400, detail="Failed to read uploaded file.") from exc
+
+    try:
+        molecule = parse_uploaded_file(file.filename, contents)
+    except UnsupportedFileTypeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except MoleculeParseError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    MOLECULE_STORE[molecule.id] = molecule
+    return {"id": molecule.id}
+
+
+@app.get("/molecule/by-smiles", response_model=MoleculeResponse)
+async def molecule_by_smiles(
+    smiles: str = Query(..., min_length=1),
+    minimize: bool = Query(False),
+) -> MoleculeResponse:
+    value = smiles.strip()
+    if not value:
+        raise HTTPException(status_code=422, detail="SMILES string cannot be empty.")
+
+    try:
+        molecule = create_molecule(value, minimize=minimize)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return MoleculeResponse.from_molecule(molecule)
+
+
+@app.get("/molecule/{molecule_id}", response_model=MoleculeResponse)
+async def get_molecule(molecule_id: str) -> MoleculeResponse:
+    molecule = MOLECULE_STORE.get(molecule_id)
+    if molecule is None:
+        raise HTTPException(status_code=404, detail="Molecule not found.")
+    return MoleculeResponse.from_molecule(molecule)
 
 
 @app.post("/smiles", response_model=MoleculeResponse)
