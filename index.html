@@ -12,11 +12,16 @@
         <canvas id="molecule-canvas"></canvas>
         <div id="loading-indicator" role="status" aria-live="polite">Initialising renderer…</div>
       </section>
+      <section class="viewer-wrapper" aria-label="Sample molecule viewer">
+        <div id="viewer" role="application" aria-label="3D molecular visualisation"></div>
+        <div id="viewer-status" role="status" aria-live="polite">Loading sample molecule…</div>
+      </section>
       <section class="info-panel">
         <h1>Molecule Visualizer</h1>
         <p>
-          A lightweight Three.js playground for experimenting with molecule-like scenes. Use the
-          controls in the viewport to orbit, pan, and zoom around the placeholder geometry.
+          Explore two complementary experiences: a stylised Three.js scene and an interactive
+          molecule rendered with 3Dmol.js. Use the controls in each viewport to orbit, pan, and zoom
+          around the structures.
         </p>
         <ul>
           <li>Drag with the left mouse button to orbit the object.</li>
@@ -26,6 +31,7 @@
       </section>
     </main>
 
+    <script src="https://unpkg.com/3dmol/build/3Dmol-min.js"></script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
