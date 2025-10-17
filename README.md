@@ -1,6 +1,6 @@
 # Molecule Visualizer Monorepo
 
-A lightweight mono-repository that hosts the static Three.js prototype for the molecule visualizer alongside a FastAPI backend scaffold. The project ships with Docker tooling so new contributors can spin everything up with a single command.
+A lightweight mono-repository that hosts a Vite-powered React prototype for the molecule visualizer alongside a FastAPI backend scaffold. The project ships with Docker tooling so new contributors can spin everything up with a single command.
 
 ## Repository layout
 
@@ -9,12 +9,14 @@ A lightweight mono-repository that hosts the static Three.js prototype for the m
 ├── backend/                 # FastAPI stub and Python dependencies
 │   ├── app.py
 │   └── requirements.txt
-├── frontend/                # Static assets served by a Node dev server
+├── frontend/                # Vite + React + Tailwind frontend
+│   ├── index.html
 │   ├── package.json
-│   ├── package-lock.json
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── styles/
+│   │   └── lib/
 │   └── public/
-│       ├── index.html
-│       ├── main.js
 │       └── samples/
 ├── docker-compose.yml       # Development services for the monorepo
 ├── .editorconfig
@@ -66,9 +68,10 @@ The Compose file respects a few shared variables so that both services agree on 
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `FRONTEND_PORT` | `5173` | Host port that proxies to the Node static server inside the `frontend` container. |
+| `FRONTEND_PORT` | `5173` | Host port that proxies to the Vite dev server inside the `frontend` container. |
 | `BACKEND_PORT` | `8000` | Host port that proxies to the FastAPI server. |
-| `API_BASE_URL` | `http://backend:8000` | Injected into the frontend container so it knows how to reach the backend service. |
+| `API_BASE_URL` | `http://backend:8000` | Injected into the frontend container for backwards compatibility and used to derive the Vite configuration. |
+| `VITE_API_BASE_URL` | `http://backend:8000` | Base URL the frontend reads at runtime when issuing API calls. |
 
 Update `.env` to customise the values. Docker Compose will automatically read the file.
 
@@ -82,7 +85,9 @@ npm install
 npm run dev
 ```
 
-Then open [http://localhost:5173](http://localhost:5173). The dev server streams the static files from `frontend/public/`. Update `main.js` to mount your Three.js scene and use the molecules under `frontend/public/samples/` during development.
+Then open [http://localhost:5173](http://localhost:5173). The Vite dev server hot-reloads React components from `frontend/src`. Global styles live in `src/styles/index.css`, and the example molecule files remain under `frontend/public/samples/`.
+
+Create a `.env` file inside `frontend/` and set `VITE_API_BASE_URL` if you need to point the app at a backend running on a different host.
 
 ## Working on the backend locally
 
