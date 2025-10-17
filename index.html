@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Molecule Visualizer</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='6' cy='12' r='3' fill='%2360a5fa'/><circle cx='18' cy='6' r='3' fill='%23facc15'/><circle cx='18' cy='18' r='3' fill='%23a855f7'/><path d='M7.8 10.8l8.4-4.4M7.8 13.2l8.4 4.4' stroke='%23f1f5f9' stroke-width='1.6' stroke-linecap='round' /></svg>" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="canvas-wrapper" aria-label="Interactive molecule scene">
+        <canvas id="molecule-canvas"></canvas>
+        <div id="loading-indicator" role="status" aria-live="polite">Initialising renderer…</div>
+      </section>
+      <section class="info-panel">
+        <h1>Molecule Visualizer</h1>
+        <p>
+          A lightweight Three.js playground for experimenting with molecule-like scenes. Use the
+          controls in the viewport to orbit, pan, and zoom around the placeholder geometry.
+        </p>
+        <ul>
+          <li>Drag with the left mouse button to orbit the object.</li>
+          <li>Hold the right mouse button to pan the camera.</li>
+          <li>Scroll to zoom in and out.</li>
+        </ul>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
