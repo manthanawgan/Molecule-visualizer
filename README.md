@@ -91,10 +91,25 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app:app --reload --port 8000
+uvicorn backend.app:app --reload --port 8000
 ```
 
-The stub currently exposes a single `GET /health` endpoint. Expand `backend/app.py` with additional routes as the API surface grows.
+The backend provides a lightweight SMILES parser that powers the prototype
+endpoints:
+
+- `GET /health` — liveness probe used by the Docker tooling.
+- `POST /smiles` — create a new molecule or update an existing one. Pass
+  `{"minimize": true}` to trigger the UFF-inspired minimisation step which
+  recentres and shortens the generated geometry.
+- `GET /distance` — compute the Euclidean distance between any two atoms stored
+  in a molecule created via `/smiles`.
+
+Run the automated backend tests with:
+
+```bash
+cd backend
+pytest
+```
 
 ## License
 
