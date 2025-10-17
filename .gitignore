@@ -34,6 +34,13 @@ venv/
 # macOS / Windows
 .DS_Store
 Thumbs.db
+.DS_Store
+.idea/
+*.swp
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
 
 # Build artifacts
 dist/
