@@ -15,7 +15,7 @@ A lightweight mono-repository that hosts a Vite-powered React prototype for the 
 │   ├── pyproject.toml
 │   └── requirements.txt
 ├── frontend/                # Vite + React + Tailwind frontend
-│   ├── index.html           # Static assets served by a Node dev server
+│   ├── index.html
 │   ├── package.json
 │   ├── src/
 │   │   ├── App.tsx
