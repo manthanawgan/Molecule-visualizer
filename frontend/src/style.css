@@ -1,0 +1,58 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #1a1a1a;
+  background-color: #f8fafc;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+canvas {
+  border-radius: 1rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.15);
+  background: radial-gradient(circle at 10% 20%, #111827, #020617);
+}
+
+section {
+  max-width: 460px;
+}
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 9999px;
+  border: none;
+  color: white;
+  background: linear-gradient(120deg, #3b82f6, #a855f7);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(59, 130, 246, 0.35);
+}
+
+pre {
+  padding: 1rem;
+  background: rgba(148, 163, 184, 0.15);
+  border-radius: 0.75rem;
+  margin-top: 1rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
