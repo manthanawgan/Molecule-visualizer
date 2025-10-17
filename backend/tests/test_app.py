@@ -18,6 +18,64 @@ def _extract_coordinates(payload: dict) -> list[tuple[float, float, float]]:
     return [(atom["x"], atom["y"], atom["z"]) for atom in payload["atoms"]]
 
 
+def test_upload_and_retrieve_molecule() -> None:
+    xyz_content = (
+        "3\n"
+        "water molecule\n"
+        "O 0.000 0.000 0.000\n"
+        "H 0.758 0.000 0.504\n"
+        "H -0.758 0.000 0.504\n"
+    ).encode()
+
+    response = client.post(
+        "/upload",
+        files={"file": ("water.xyz", xyz_content, "text/plain")},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    molecule_id = payload["id"]
+
+    assert molecule_id in MOLECULE_STORE
+
+    stored = MOLECULE_STORE[molecule_id]
+    assert len(stored.atoms) == 3
+    assert stored.atoms[0].element == "O"
+
+    retrieved = client.get(f"/molecule/{molecule_id}")
+    assert retrieved.status_code == 200
+    retrieved_payload = retrieved.json()
+    assert retrieved_payload["id"] == molecule_id
+    assert retrieved_payload["atoms"][0]["element"] == "O"
+    assert retrieved_payload["bond_distances"] == {}
+
+
+def test_upload_rejects_unsupported_extension() -> None:
+    response = client.post(
+        "/upload",
+        files={"file": ("notes.txt", b"not a molecule", "text/plain")},
+    )
+    assert response.status_code == 400
+
+
+def test_get_molecule_missing_returns_404() -> None:
+    response = client.get("/molecule/does-not-exist")
+    assert response.status_code == 404
+
+
+def test_molecule_by_smiles_generates_without_storing() -> None:
+    response = client.get(
+        "/molecule/by-smiles",
+        params={"smiles": "CCO", "minimize": True},
+    )
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["smiles"] == "CCO"
+    assert payload["minimized"] is True
+    assert payload["bond_distances"]["0-1"] == pytest.approx(MINIMIZED_BOND_LENGTH)
+    assert payload["id"] not in MOLECULE_STORE
+
+
 def test_minimisation_updates_coordinates_and_store() -> None:
     initial = client.post("/smiles", json={"smiles": "CCO"})
     assert initial.status_code == 200
